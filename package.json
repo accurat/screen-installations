@@ -1,0 +1,7 @@
+{
+  "name": "screen-installations",
+  "private": true,
+  "workspaces": [
+    "projects/*"
+  ]
+}
