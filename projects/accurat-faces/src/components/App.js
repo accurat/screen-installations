@@ -1,5 +1,5 @@
 import React from 'react'
-import { range, debounce, shuffle, cloneDeep, uniq, difference } from 'lodash-es'
+import { range, debounce, shuffle, cloneDeep, uniq } from 'lodash-es'
 import queryString from 'query-string'
 import imagesUrl from '../images.json'
 
@@ -8,9 +8,9 @@ const { fractions } = queryString.parse(location.search)
 const RATIO = 800 / 1000
 const FRACTIONS = fractions || 1
 
-const OVERLAPPING_TIME = 3000
-const OVERLAPPING_TRANSITION_TIME = 1000
-const SHUFFLE_TIME = 300
+const OVERLAPPING_TIME = 20000
+const OVERLAPPING_TRANSITION_TIME = 400
+const SHUFFLE_TIME = 200
 
 export class App extends React.Component {
   images = []
@@ -28,21 +28,29 @@ export class App extends React.Component {
       )
       this.startPositions = cloneDeep(this.positions)
 
+      const DELAY = 200
+
       window.addEventListener('resize', this.resize)
-      // TODO use transitionend
+      // TODO use transitionend and promises
       this.overlapFaces()
       this.overlapInterval = setInterval(
         this.overlapFaces,
-        OVERLAPPING_TRANSITION_TIME * 2 + OVERLAPPING_TIME + SHUFFLE_TIME * this.images.length
+        OVERLAPPING_TRANSITION_TIME * 2 +
+          OVERLAPPING_TIME +
+          SHUFFLE_TIME * this.images.length +
+          DELAY * 2
       )
 
       setTimeout(() => {
         this.shuffle()
         this.shuffleInterval = setInterval(
           this.shuffle,
-          OVERLAPPING_TRANSITION_TIME * 2 + OVERLAPPING_TIME + SHUFFLE_TIME * this.images.length
+          OVERLAPPING_TRANSITION_TIME * 2 +
+            OVERLAPPING_TIME +
+            SHUFFLE_TIME * this.images.length +
+            DELAY * 2
         )
-      }, OVERLAPPING_TRANSITION_TIME * 2 + OVERLAPPING_TIME)
+      }, OVERLAPPING_TRANSITION_TIME * 2 + OVERLAPPING_TIME + DELAY)
     }, 2000)
   }
 
@@ -84,7 +92,7 @@ export class App extends React.Component {
   }
 
   shuffle = () => {
-    console.log('🌀 SHUFFLE')
+    if (window.DEBUG) console.log('🌀 SHUFFLE')
 
     const { sorting } = this.state
     this.previousSorting = cloneDeep(sorting)
@@ -143,8 +151,8 @@ export class App extends React.Component {
     // do the transition
     setTimeout(() => {
       this.images.forEach(image => {
-        // easeInOutSine
-        image.style.transition = `all ${SHUFFLE_TIME}ms ease`
+        // easeInOutQuad
+        image.style.transition = `all ${SHUFFLE_TIME}ms cubic-bezier(0.455, 0.03, 0.515, 0.955)`
         image.style.transform = null
       })
 
@@ -155,20 +163,25 @@ export class App extends React.Component {
         image.style.transitionDelay = `${delay}ms`
         setTimeout(() => {
           image.style.zIndex = i + 1
-
-          // TODO reset z-indexes at the end
-          // image.style.zIndex = null
         }, delay)
       })
+
+      setTimeout(() => {
+        this.images.forEach(image => {
+          image.style.zIndex = null
+        })
+      }, this.images.length * SHUFFLE_TIME)
+
       // 16 because 0 sometimes does no transition
     }, 16)
   }
 
   overlapFaces = () => {
-    console.log('👨‍💼 OVERLAP')
+    if (window.DEBUG) console.log('👨‍💼 OVERLAP')
 
     this.images.forEach((image, i) => {
-      image.style.transition = `all ${OVERLAPPING_TRANSITION_TIME}ms ease`
+      // easeInOutCubic
+      image.style.transition = `all ${OVERLAPPING_TRANSITION_TIME}ms cubic-bezier(0.645, 0.045, 0.355, 1)`
 
       const { left, width } = this.positions[i]
 
@@ -186,10 +199,11 @@ export class App extends React.Component {
   }
 
   unOverlapFaces = () => {
-    console.log('👨‍👩‍👧‍👦 UNOVERLAP')
+    if (window.DEBUG) console.log('👨‍👩‍👧‍👦 UNOVERLAP')
 
     this.images.forEach(image => {
-      image.style.transition = `all ${OVERLAPPING_TRANSITION_TIME}ms ease`
+      // easeOutBack
+      image.style.transition = `all ${OVERLAPPING_TRANSITION_TIME}ms cubic-bezier(0.175, 0.885, 0.32, 1.275)`
 
       image.style.transform = null
 

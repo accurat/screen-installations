@@ -7,4 +7,6 @@ import 'tachyons-extra'
 import './reset.css'
 import './style.css'
 
+window.DEBUG = window.location.search.includes('debug')
+
 ReactDOM.render(<App />, document.getElementById('root'))
