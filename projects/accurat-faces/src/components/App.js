@@ -51,7 +51,7 @@ export class App extends React.Component {
             DELAY * 2
         )
       }, OVERLAPPING_TRANSITION_TIME * 2 + OVERLAPPING_TIME + DELAY)
-    }, 2000)
+    }, 10000)
   }
 
   componentWillUnmount() {
