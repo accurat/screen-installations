@@ -254,7 +254,7 @@ export class App extends React.Component {
         }}
       >
         {this.orderedImagesUrl.map(image => (
-          <div key={image} className="js_image-container relative">
+          <div key={image} className="js_image-container relative will-change-transform">
             <img
               src={image}
               width={imageWidth}
