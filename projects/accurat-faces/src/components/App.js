@@ -1,16 +1,19 @@
 import React from 'react'
 import { range, debounce, shuffle, cloneDeep, uniq } from 'lodash-es'
-import queryString from 'query-string'
 import imagesUrl from '../images.json'
 
-const { fractions } = queryString.parse(location.search)
+window.DEBUG = window.location.search.includes('debug')
 
 const RATIO = 800 / 1000
-const FRACTIONS = fractions || 1
+const FRACTIONS = 1
+const OVERLAPPING_TIME = window.DEBUG ? 2000 : 20000
+const OVERLAPPING_TRANSITION_TIME_IN = 1000
+const OVERLAPPING_TRANSITION_TIME_OUT = 500
+const IMAGE_OPACITY_TRANSITION_PERCENTAGE = 0.25
+const SHUFFLE_SINGLE_TIME = 200
 
-const OVERLAPPING_TIME = 20000
-const OVERLAPPING_TRANSITION_TIME = 400
-const SHUFFLE_TIME = 200
+// TODO use transitionend and remove this delay
+const SAFE_DELAY = 500
 
 export class App extends React.Component {
   images = []
@@ -20,38 +23,41 @@ export class App extends React.Component {
   }
 
   componentDidMount() {
-    setTimeout(() => {
-      this.images = [...document.querySelectorAll('.js_image-container')]
-      this.startImages = [...this.images]
-      this.positions = this.images.map(image =>
-        JSON.parse(JSON.stringify(image.getBoundingClientRect()))
-      )
-      this.startPositions = cloneDeep(this.positions)
-
-      const DELAY = 200
-
-      window.addEventListener('resize', this.resize)
-      // TODO use transitionend and promises
-      this.overlapFaces()
-      this.overlapInterval = setInterval(
-        this.overlapFaces,
-        OVERLAPPING_TRANSITION_TIME * 2 +
-          OVERLAPPING_TIME +
-          SHUFFLE_TIME * this.images.length +
-          DELAY * 2
-      )
-
-      setTimeout(() => {
-        this.shuffle()
-        this.shuffleInterval = setInterval(
-          this.shuffle,
-          OVERLAPPING_TRANSITION_TIME * 2 +
-            OVERLAPPING_TIME +
-            SHUFFLE_TIME * this.images.length +
-            DELAY * 2
+    setTimeout(
+      () => {
+        this.images = [...document.querySelectorAll('.js_image-container')]
+        this.startImages = [...this.images]
+        this.positions = this.images.map(image =>
+          JSON.parse(JSON.stringify(image.getBoundingClientRect()))
         )
-      }, OVERLAPPING_TRANSITION_TIME * 2 + OVERLAPPING_TIME + DELAY)
-    }, 10000)
+        this.startPositions = cloneDeep(this.positions)
+
+        window.addEventListener('resize', this.resize)
+        // TODO use transitionend and promises
+        this.overlapFaces()
+        this.overlapInterval = setInterval(
+          this.overlapFaces,
+          OVERLAPPING_TRANSITION_TIME_IN +
+            OVERLAPPING_TRANSITION_TIME_OUT +
+            OVERLAPPING_TIME +
+            SHUFFLE_SINGLE_TIME * this.images.length +
+            SAFE_DELAY * 2
+        )
+
+        setTimeout(() => {
+          this.shuffle()
+          this.shuffleInterval = setInterval(
+            this.shuffle,
+            OVERLAPPING_TRANSITION_TIME_IN +
+              OVERLAPPING_TRANSITION_TIME_OUT +
+              OVERLAPPING_TIME +
+              SHUFFLE_SINGLE_TIME * this.images.length +
+              SAFE_DELAY * 2
+          )
+        }, OVERLAPPING_TRANSITION_TIME_IN + OVERLAPPING_TRANSITION_TIME_OUT + OVERLAPPING_TIME + SAFE_DELAY)
+      },
+      window.DEBUG ? 1000 : 10000
+    )
   }
 
   componentWillUnmount() {
@@ -67,7 +73,10 @@ export class App extends React.Component {
     this.setState({ columns })
   }, 30)
 
-  // TODO vertical padding
+  get VERTICAL_SPACING() {
+    return window.innerHeight * 0.1
+  }
+
   get HORIZONTAL_SPACING() {
     return window.innerWidth * 0.2
   }
@@ -80,7 +89,7 @@ export class App extends React.Component {
 
       const imageWidth = (window.innerWidth - this.HORIZONTAL_SPACING) / columns
       const imageHeight = imageWidth * (1 / RATIO)
-      imagesHeight = imageHeight * Math.ceil(imagesUrl.length / columns)
+      imagesHeight = imageHeight * Math.ceil(imagesUrl.length / columns) + this.VERTICAL_SPACING
     } while (imagesHeight > window.innerHeight)
 
     return columns
@@ -152,13 +161,13 @@ export class App extends React.Component {
     setTimeout(() => {
       this.images.forEach(image => {
         // easeInOutQuad
-        image.style.transition = `all ${SHUFFLE_TIME}ms cubic-bezier(0.455, 0.03, 0.515, 0.955)`
+        image.style.transition = `all ${SHUFFLE_SINGLE_TIME}ms cubic-bezier(0.455, 0.03, 0.515, 0.955)`
         image.style.transform = null
       })
 
       const orderedImages = sequentialSorting.map(n => this.startImages[n])
       orderedImages.forEach((image, i) => {
-        const delay = i * SHUFFLE_TIME
+        const delay = i * SHUFFLE_SINGLE_TIME
 
         image.style.transitionDelay = `${delay}ms`
         setTimeout(() => {
@@ -170,7 +179,7 @@ export class App extends React.Component {
         this.images.forEach(image => {
           image.style.zIndex = null
         })
-      }, this.images.length * SHUFFLE_TIME)
+      }, this.images.length * SHUFFLE_SINGLE_TIME)
 
       // 16 because 0 sometimes does no transition
     }, 16)
@@ -180,8 +189,8 @@ export class App extends React.Component {
     if (window.DEBUG) console.log('👨‍💼 OVERLAP')
 
     this.images.forEach((image, i) => {
-      // easeInOutCubic
-      image.style.transition = `all ${OVERLAPPING_TRANSITION_TIME}ms cubic-bezier(0.645, 0.045, 0.355, 1)`
+      // easeOutExpo
+      image.style.transition = `all ${OVERLAPPING_TRANSITION_TIME_IN}ms cubic-bezier(0.19, 1, 0.22, 1)`
 
       const { left, width } = this.positions[i]
 
@@ -191,11 +200,12 @@ export class App extends React.Component {
 
       // hide the full image
       const fullImage = image.querySelector('.js_image-full')
-      fullImage.style.transition = `all ${OVERLAPPING_TRANSITION_TIME * 0.5}ms ease`
+      fullImage.style.transition = `all ${OVERLAPPING_TRANSITION_TIME_IN *
+        IMAGE_OPACITY_TRANSITION_PERCENTAGE}ms ease`
       fullImage.style.opacity = 0
     })
 
-    setTimeout(this.unOverlapFaces, OVERLAPPING_TRANSITION_TIME + OVERLAPPING_TIME)
+    setTimeout(this.unOverlapFaces, OVERLAPPING_TRANSITION_TIME_IN + OVERLAPPING_TIME)
   }
 
   unOverlapFaces = () => {
@@ -203,14 +213,14 @@ export class App extends React.Component {
 
     this.images.forEach(image => {
       // easeOutBack
-      image.style.transition = `all ${OVERLAPPING_TRANSITION_TIME}ms cubic-bezier(0.175, 0.885, 0.32, 1.275)`
+      image.style.transition = `all ${OVERLAPPING_TRANSITION_TIME_OUT}ms cubic-bezier(0.175, 0.885, 0.32, 1.275)`
 
       image.style.transform = null
 
       // show the full image
       const fullImage = image.querySelector('.js_image-full')
-      fullImage.style.transition = `all ${OVERLAPPING_TRANSITION_TIME *
-        0.5}ms ${OVERLAPPING_TRANSITION_TIME * 0.5}ms ease`
+      fullImage.style.transition = `all ${OVERLAPPING_TRANSITION_TIME_OUT *
+        IMAGE_OPACITY_TRANSITION_PERCENTAGE}ms ease`
       fullImage.style.opacity = null
     })
   }
