@@ -3,5 +3,15 @@
   "private": true,
   "workspaces": [
     "projects/*"
-  ]
+  ],
+  "scripts": {
+    "update-faces": "node ./update-faces.js"
+  },
+  "devDependencies": {
+    "chalk": "^2.4.2",
+    "fs-extra": "^8.1.0",
+    "got": "^9.6.0",
+    "jsdom": "^15.1.1",
+    "lodash": "^4.17.15"
+  }
 }

@@ -1,0 +1,9 @@
+:root {
+  --gray-dark: #222;
+}
+
+body {
+  background: var(--gray-dark);
+}
+
+@fuss color(gray-dark, var(--gray-dark));

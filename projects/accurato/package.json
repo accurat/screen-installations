@@ -1,5 +1,5 @@
 {
-  "name": "accurat-faces",
+  "name": "accurato",
   "private": true,
   "version": "0.1.0",
   "license": "MIT",
@@ -29,10 +29,12 @@
   },
   "dependencies": {
     "@accurat/tachyons-lite": "^1.0.4",
+    "canvas-sketch-util": "^1.8.0",
     "d3": "^5.12.0",
+    "delay": "^4.3.0",
+    "eases": "^1.0.8",
     "lodash-es": "^4.17.15",
     "modern-normalize": "^0.5.0",
-    "query-string": "^6.8.3",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "tachyons-extra": "^1.1.3"
