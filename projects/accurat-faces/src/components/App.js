@@ -9,7 +9,8 @@ const FRACTIONS = 1
 const OVERLAPPING_TIME = window.DEBUG ? 2000 : 20000
 const OVERLAPPING_TRANSITION_TIME_IN = 1000
 const OVERLAPPING_TRANSITION_TIME_OUT = 500
-const IMAGE_OPACITY_TRANSITION_PERCENTAGE = 0.25
+const IMAGE_OPACITY_TRANSITION_PERCENTAGE_IN = 0.1
+const IMAGE_OPACITY_TRANSITION_PERCENTAGE_OUT = 0.25
 const SHUFFLE_SINGLE_TIME = 200
 
 // TODO use transitionend and remove this delay
@@ -201,7 +202,7 @@ export class App extends React.Component {
       // hide the full image
       const fullImage = image.querySelector('.js_image-full')
       fullImage.style.transition = `all ${OVERLAPPING_TRANSITION_TIME_IN *
-        IMAGE_OPACITY_TRANSITION_PERCENTAGE}ms ease`
+        IMAGE_OPACITY_TRANSITION_PERCENTAGE_IN}ms ease`
       fullImage.style.opacity = 0
     })
 
@@ -220,7 +221,7 @@ export class App extends React.Component {
       // show the full image
       const fullImage = image.querySelector('.js_image-full')
       fullImage.style.transition = `all ${OVERLAPPING_TRANSITION_TIME_OUT *
-        IMAGE_OPACITY_TRANSITION_PERCENTAGE}ms ease`
+        IMAGE_OPACITY_TRANSITION_PERCENTAGE_OUT}ms ease`
       fullImage.style.opacity = null
     })
   }
