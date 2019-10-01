@@ -15,10 +15,10 @@ const ROW_IMAGES = 20 // must be at least 12
 // unit of the timings is senconds
 const MAX_START_DELAY = 0.5
 const ACCELETATION_TIME = 1
-const SHUFFLING_TIME = 3 // 5
+const SHUFFLING_TIME = 4 // 5
 const DECELETATION_TIME = 1
 const STOP_SHUFFLE_OFFSET = 1
-const STATIC_TIME = 3
+const STATIC_TIME = 10
 
 // TODO capitalizeee?? no
 const minTransform = 100 / ROW_IMAGES
@@ -132,7 +132,7 @@ export class App extends React.Component {
       // make it go from initialTransform to maxTransform
       const transform = initialTransform + (this.positions[i] % (maxTransform - initialTransform))
       row.style.transform = `translateX(-${transform}%)`
-      rowBlurred.style.opacity = this.velocities[i] / TOP_VELOCITY
+      // rowBlurred.style.opacity = this.velocities[i] / TOP_VELOCITY
       if (i === SLICES - 1) this.stopShuffle()
       return
     }
@@ -140,7 +140,7 @@ export class App extends React.Component {
     // make it go from initialTransform to maxTransform
     const transform = initialTransform + (this.positions[i] % (maxTransform - initialTransform))
     row.style.transform = `translateX(-${transform}%)`
-    rowBlurred.style.opacity = this.velocities[i] / TOP_VELOCITY
+    // rowBlurred.style.opacity = this.velocities[i] / TOP_VELOCITY
     requestAnimationFrame(() => this.updateRow(i))
   }
 
@@ -234,14 +234,14 @@ export class App extends React.Component {
                   <img key={j} src={image} className="flex-none h-100" />
                 ))}
 
-                <div
+                {/* <div
                   className="js_row-blurred o-0 absolute absolute--fill flex"
                   style={{ filter: 'url(#blur)' }}
                 >
                   {pool.map((image, j) => (
                     <img key={j} src={image} className="flex-none h-100" />
                   ))}
-                </div>
+                </div> */}
               </div>
             )
           })}
