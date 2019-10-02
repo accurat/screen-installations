@@ -185,11 +185,8 @@ class CommitVoronoi {
 
       if (window.DEBUG && this.state.showCenters) {
         this.drawPoint(this.scalePoint(point), '#000')
-      }
-
-      if (target && window.DEBUG && this.state.showCenters) {
-        this.drawPoint(this.scalePoint(target), '#f00')
         this.drawLine(this.scalePoint(point), this.scalePoint(target), '#000')
+        this.drawPoint(this.scalePoint(target), '#f00')
       }
     }
 
