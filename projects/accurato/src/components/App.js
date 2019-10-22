@@ -47,8 +47,8 @@ export class App extends React.Component {
 
     this.startShuffle()
 
-    // refresh after an hour to fix the freezing problem
-    setTimeout(() => window.location.reload(), 60 * 60 * 1000)
+    // refresh after 15 min to fix the freezing problem
+    setTimeout(() => window.location.reload(), 15 * 60 * 1000)
   }
 
   startShuffle = () => {
