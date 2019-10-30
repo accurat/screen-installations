@@ -2,6 +2,7 @@ import os
 import urllib.parse
 import requests
 import pdb
+import json
 from database import insert_user
 from dotenv import load_dotenv
 
@@ -10,6 +11,7 @@ load_dotenv()
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URL = os.getenv("REDIRECT_URL")
+print(REDIRECT_URL)
 SCOPES = os.getenv("SCOPES")
 
 
@@ -76,12 +78,35 @@ def get_user_currently_playing(user_token):
     user_token = get_user_fresh_token(user_token)
     headers = {"Authorization": f"Bearer {user_token}"}
     response = requests.get(url, headers=headers)
+    print(response)
     try:
         data = response.json()
+        print(data)
         song_id = data["item"]["id"]
     except:
         song_id = None
     return song_id
+
+
+def get_user_recent_songs(user_token):
+    url = "https://api.spotify.com/v1/me/player/recently-played?limit=50"
+    user_token = get_user_fresh_token(user_token)
+    headers = {"Authorization": f"Bearer {user_token}"}
+    response = requests.get(url, headers=headers)
+    try:
+        data = response.json()["items"]
+        return data
+    except:
+        return None
+
+
+def save_recent_songs(user_token):
+    songs = get_user_recent_songs(user_token)
+    song_ids = [song["track"]["id"] for song in songs]
+    features = get_features(song_ids)
+    with open(f"user_{user_token}.json", "w") as o:
+        json.dump(features, o)
+    return features
 
 
 def get_features(song_ids):
@@ -96,9 +121,9 @@ def get_features(song_ids):
 def get_all_user_playing(user_tokens):
     song_ids = []
     for user_token in user_tokens:
+        # save_recent_songs(user_token)
         song_id = get_user_currently_playing(user_token)
         if song_id is not None:
             song_ids.append(song_id)
     features = get_features(song_ids)
-    #cool_features = get_cool_features(song_ids)
     return features

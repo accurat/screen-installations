@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request, redirect, jsonify
 from dotenv import load_dotenv
-from spotify import get_spotify_url, save_user, get_all_user_playing
+from spotify import get_spotify_url, save_user, save_recent_songs
 from database import initialize, retrieve_last_songs
 from scheduler import start_scheduler
 
@@ -14,10 +14,10 @@ initialize()
 
 @app.route("/")
 def home():
-    return "Maronn!"
+    return "Wella!"
 
 
-@app.route("/authorize")
+@app.route("/auth")
 def authorize():
     return redirect(get_spotify_url("test"))
 
