@@ -9,10 +9,8 @@ DELAY = 60
 
 def get_currently_playing():
     all_users_tokens = get_all_user_tokens()
-    print(all_users_tokens)
-    songs = get_all_user_playing(all_users_tokens)
-    print(songs)
-    insert_readings(songs)
+    [user_song_ids, song_features] = get_all_user_playing(all_users_tokens)
+    insert_readings(user_song_ids, song_features)
 
 
 def periodically_update_db():

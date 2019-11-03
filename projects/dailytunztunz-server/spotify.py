@@ -11,7 +11,6 @@ load_dotenv()
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URL = os.getenv("REDIRECT_URL")
-print(REDIRECT_URL)
 SCOPES = os.getenv("SCOPES")
 
 
@@ -78,10 +77,8 @@ def get_user_currently_playing(user_token):
     user_token = get_user_fresh_token(user_token)
     headers = {"Authorization": f"Bearer {user_token}"}
     response = requests.get(url, headers=headers)
-    print(response)
     try:
         data = response.json()
-        print(data)
         song_id = data["item"]["id"]
     except:
         song_id = None
@@ -109,7 +106,8 @@ def save_recent_songs(user_token):
     return features
 
 
-def get_features(song_ids):
+def get_features(user_song_ids):
+    song_ids = [row[1] for row in user_song_ids]
     joined_ids = ",".join(song_ids)
     url = f"https://api.spotify.com/v1/audio-features?ids={joined_ids}"
     token = get_app_token()
@@ -118,12 +116,14 @@ def get_features(song_ids):
     return response.json()["audio_features"]
 
 
-def get_all_user_playing(user_tokens):
-    song_ids = []
-    for user_token in user_tokens:
-        # save_recent_songs(user_token)
+def get_all_user_playing(users):
+    user_song_ids = []
+    if len(users) == 0:
+        return []
+    for user in users:
+        [user_id, user_token] = user
         song_id = get_user_currently_playing(user_token)
         if song_id is not None:
-            song_ids.append(song_id)
-    features = get_features(song_ids)
-    return features
+            user_song_ids.append([user_id, song_id])
+    features = get_features(user_song_ids)
+    return [user_song_ids, features]
