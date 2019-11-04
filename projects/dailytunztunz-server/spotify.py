@@ -107,6 +107,8 @@ def save_recent_songs(user_token):
 
 
 def get_features(user_song_ids):
+    if len(user_song_ids) == 0:
+        return []
     song_ids = [row[1] for row in user_song_ids]
     joined_ids = ",".join(song_ids)
     url = f"https://api.spotify.com/v1/audio-features?ids={joined_ids}"
