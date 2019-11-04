@@ -23,18 +23,23 @@ def initialize(cursor):
     cursor.execute(
         "CREATE TABLE IF NOT EXISTS users (id text, name text, token text)")
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS songs (id text, json text)")
+        "CREATE TABLE IF NOT EXISTS songs (id text, json text, duration_ms integer)")
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS user_song (user_id text, song_id text, iteration integer)")
+        "CREATE TABLE IF NOT EXISTS user_song (user_id text, song_id text, iteration integer, progress_ms integer)")
     cursor.execute(
         "CREATE TABLE IF NOT EXISTS readings (iteration integer, time datetime)")
 
 
 @with_connection
 def insert_user(cursor, id, name, token):
-    cursor.execute(
-        "INSERT INTO users(id, name, token) VALUES(?, ?, ?)", [id, name, token]
-    )
+    cursor.execute("SELECT COUNT(*) FROM users WHERE id = ?", [id])
+    user_count = cursor.fetchall()[0][0]
+    user_exists = user_count != 0
+    if not user_exists:
+        cursor.execute(
+            "INSERT INTO users(id, name, token) VALUES(?, ?, ?)", [
+                id, name, token]
+        )
 
 
 @with_connection
@@ -53,11 +58,11 @@ def insert_readings(cursor, user_song_ids, song_features):
         song_count = cursor.fetchall()[0][0]
         song_exists = song_count != 0
         if not song_exists:
-            cursor.execute("INSERT INTO songs(id, json) VALUES (?, ?)", [
-                           song["id"], json.dumps(song)])
-    for [user_id, song_id] in user_song_ids:
-        cursor.execute("INSERT INTO user_song(user_id, song_id, iteration) VALUES (?, ?, ?)", [
-                       user_id, song_id, current_reading])
+            cursor.execute("INSERT INTO songs(id, json, duration_ms) VALUES (?, ?, ?)", [
+                           song["id"], json.dumps(song), song["duration_ms"]])
+    for row in user_song_ids:
+        cursor.execute("INSERT INTO user_song(user_id, song_id, iteration, progress_ms) VALUES (?, ?, ?, ?)", [
+                       row["user_id"], row["song_id"], current_reading, row["progress_ms"]])
 
 
 @with_connection
@@ -67,10 +72,23 @@ def get_all_user_tokens(cursor):
     return rows
 
 
+def parse_row(row):
+    [user_id, progress_ms, duration_ms, song_raw] = row
+    song_data = json.loads(song_raw)
+    return {
+        "user_id": user_id,
+        "progress_ms": progress_ms,
+        "duration_ms": duration_ms,
+        **song_data
+    }
+
+
 @with_connection
 def retrieve_last_songs(cursor):
     cursor.execute("""SELECT
                    user_song.user_id,
+                   user_song.progress_ms,
+                   songs.duration_ms,
                    songs.json
                    FROM
                    user_song
@@ -83,5 +101,5 @@ def retrieve_last_songs(cursor):
                        FROM
                        readings)
                    """)
-    rows = [[row[0], json.loads(row[1])] for row in cursor.fetchall()]
+    rows = [parse_row(row) for row in cursor.fetchall()]
     return rows

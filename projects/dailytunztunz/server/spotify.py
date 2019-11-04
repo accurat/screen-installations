@@ -79,10 +79,14 @@ def get_user_currently_playing(user_token):
     response = requests.get(url, headers=headers)
     try:
         data = response.json()
-        song_id = data["item"]["id"]
+        song_data = {
+            'id': data["item"]["id"],
+            "progress_ms": data["progress_ms"],
+            "duration_ms": data["item"]["duration_ms"]
+        }
     except:
-        song_id = None
-    return song_id
+        song_data = None
+    return song_data
 
 
 def get_user_recent_songs(user_token):
@@ -109,7 +113,7 @@ def save_recent_songs(user_token):
 def get_features(user_song_ids):
     if len(user_song_ids) == 0:
         return []
-    song_ids = [row[1] for row in user_song_ids]
+    song_ids = [row["song_id"] for row in user_song_ids]
     joined_ids = ",".join(song_ids)
     url = f"https://api.spotify.com/v1/audio-features?ids={joined_ids}"
     token = get_app_token()
@@ -121,11 +125,17 @@ def get_features(user_song_ids):
 def get_all_user_playing(users):
     user_song_ids = []
     if len(users) == 0:
-        return []
+        return [[], []]
     for user in users:
         [user_id, user_token] = user
-        song_id = get_user_currently_playing(user_token)
-        if song_id is not None:
-            user_song_ids.append([user_id, song_id])
+        song_data = get_user_currently_playing(user_token)
+        if song_data is not None:
+            item = {
+                "song_id": song_data["id"],
+                "progress_ms": song_data["progress_ms"],
+                "duration_ms": song_data["duration_ms"],
+                "user_id": user_id
+            }
+            user_song_ids.append(item)
     features = get_features(user_song_ids)
     return [user_song_ids, features]
