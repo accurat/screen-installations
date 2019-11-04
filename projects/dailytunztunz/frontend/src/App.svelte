@@ -1,13 +1,13 @@
 <script>
   import { musicData } from './store'
+  import { World } from './World'
+  const world = new World()
   $: console.log($musicData)
   export let name
 </script>
 
 <style>
-  h1 {
-    color: purple;
-  }
+
 </style>
 
-<h1>Hello {name}!</h1>
+<canvas />

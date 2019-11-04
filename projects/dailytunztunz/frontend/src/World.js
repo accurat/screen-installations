@@ -8,7 +8,7 @@ export class World {
     return this.canvas.getContext('2d')
   }
 
-  updateSongs() {}
+  updateSongs(songs) {}
 
   draw() {}
 }

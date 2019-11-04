@@ -4,7 +4,7 @@ from datetime import timedelta
 from spotify import get_all_user_playing
 from database import get_all_user_tokens, insert_readings
 
-DELAY = 60
+DELAY = 10
 
 
 def get_currently_playing():
