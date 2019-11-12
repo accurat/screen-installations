@@ -7,7 +7,7 @@ function getData(cb) {
         path: "/playing",
         hostname: "localhost",
         protocol: "http:",
-        port: 5000
+        port: 3000
       },
       res => res.on("data", d => cb(d.toString()))
     )
@@ -52,7 +52,7 @@ function startServer() {
 
   setInterval(() => publish(listeners), 1000);
 
-  server.listen(5001);
+  server.listen(3001);
 }
 
 startServer();

@@ -136,6 +136,7 @@ def get_all_user_playing(users):
                 "duration_ms": song_data["duration_ms"],
                 "user_id": user_id
             }
+            print(song_data["id"])
             user_song_ids.append(item)
     features = get_features(user_song_ids)
     return [user_song_ids, features]
