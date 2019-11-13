@@ -1,15 +1,18 @@
-import _ from 'lodash'
-import { getSongSides, getSongX, getSongY } from './lib'
+import { getSongSides, getSongX, getSongY, getSongGradient } from './lib'
 const { PI } = Math
 
 function getSize(canvas) {
-  return canvas.getBoundingClientRect()
+  const { width, height } = canvas.getBoundingClientRect()
+  return {
+    width: width * 2,
+    height: height * 2,
+  }
 }
 
 function setSize(canvas) {
   const size = getSize(canvas)
-  canvas.width = size.width * 2
-  canvas.height = size.height * 2
+  canvas.width = size.width
+  canvas.height = size.height
 }
 
 function updateSongs(songs, newSongs) {
@@ -35,22 +38,33 @@ function drawSongs(canvas, songs, now) {
   const { width, height } = getSize(canvas)
   ctx.clearRect(0, 0, width, height)
   for (const song of songs) {
-    const alpha = song.playing ? 1 : 0.4
+    const alpha = song.playing ? 1 : 0.8
     const x = getSongX(song, now)
     const y = getSongY(song, now)
     ctx.save()
     const [w, h] = getSongSides(song, now)
     const rectVals = [-w / 2, -h / 2, w, h]
+    ctx.globalAlpha = alpha
     ctx.translate(x * width, y * height)
-    ctx.rotate(PI / 3)
-    ctx.fillStyle = `rgba(256, 0, 0, ${alpha})`
+    const [horLeft, horRight] = getSongGradient(song, 'hor')
+    const horGrad = ctx.createLinearGradient(...rectVals)
+    horGrad.addColorStop(...horLeft)
+    horGrad.addColorStop(...horRight)
+    ctx.fillStyle = horGrad
     ctx.fillRect(...rectVals)
-    ctx.rotate(PI / 3)
-    ctx.fillStyle = `rgba(0, 256, 0, ${alpha})`
+    ctx.rotate(-PI / 3)
+    const [decLeft, decRight] = getSongGradient(song, 'dec')
+    const decGrad = ctx.createLinearGradient(...rectVals)
+    decGrad.addColorStop(...decLeft)
+    decGrad.addColorStop(...decRight)
+    ctx.fillStyle = decGrad
     ctx.fillRect(...rectVals)
-    ctx.rotate(PI / 3)
-    ctx.fillStyle = `rgba(0, 0, 256, ${alpha})`
-    ctx.fillRect(...rectVals)
+    ctx.rotate(-PI / 3)
+    const [incLeft, incRight] = getSongGradient(song, 'inc')
+    const incGrad = ctx.createLinearGradient(...rectVals)
+    incGrad.addColorStop(...incLeft)
+    incGrad.addColorStop(...incRight)
+    ctx.fillStyle = incGrad
     ctx.restore()
   }
   window.requestAnimationFrame(() => drawSongs(canvas, songs, Date.now()))
@@ -62,8 +76,8 @@ function createListener(songs) {
 
 export function draw(canvas, emitter) {
   const songs = []
+  setSize(canvas)
   const listener = createListener(songs)
   emitter.add(listener)
-  setSize(canvas)
   drawSongs(canvas, songs, Date.now())
 }

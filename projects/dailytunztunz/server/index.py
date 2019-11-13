@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, redirect, jsonify
 from dotenv import load_dotenv
 from spotify import get_spotify_url, save_user, save_recent_songs
-from database import initialize, retrieve_last_songs
+from database import initialize, retrieve_last_songs, retrieve_playing_songs
 from scheduler import start_scheduler
 
 load_dotenv()
@@ -31,6 +31,12 @@ def callback():
 
 @app.route("/playing")
 def playing():
+    songs = retrieve_playing_songs()
+    return jsonify(songs)
+
+
+@app.route("/last")
+def last():
     songs = retrieve_last_songs()
     return jsonify(songs)
 

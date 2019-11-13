@@ -2,15 +2,7 @@ const http = require("http");
 
 function getData(cb) {
   http
-    .get(
-      {
-        path: "/playing",
-        hostname: "localhost",
-        protocol: "http:",
-        port: 3000
-      },
-      res => res.on("data", d => cb(d.toString()))
-    )
+    .get("http://localhost:3000/last", res => res.on("data", d => cb(d.toString())))
     .on("error", err => cb(""));
 }
 

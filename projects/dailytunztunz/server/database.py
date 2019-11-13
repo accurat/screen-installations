@@ -84,7 +84,7 @@ def parse_row(row):
 
 
 @with_connection
-def retrieve_last_songs(cursor):
+def retrieve_playing_songs(cursor):
     cursor.execute("""SELECT
                    user_song.user_id,
                    user_song.progress_ms,
@@ -100,6 +100,24 @@ def retrieve_last_songs(cursor):
                        MAX(iteration)
                        FROM
                        readings)
+                   """)
+    rows = [parse_row(row) for row in cursor.fetchall()]
+    return rows
+
+
+@with_connection
+def retrieve_last_songs(cursor):
+    cursor.execute("""SELECT
+                   user_song.user_id,
+                   user_song.progress_ms,
+                   songs.duration_ms,
+                   songs.json
+                   FROM
+                   user_song
+                   LEFT JOIN songs ON
+                   songs.id=user_song.song_id
+                   ORDER BY user_song.iteration DESC
+                   LIMIT 10
                    """)
     rows = [parse_row(row) for row in cursor.fetchall()]
     return rows

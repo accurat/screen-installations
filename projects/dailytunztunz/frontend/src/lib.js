@@ -1,5 +1,12 @@
-const { min, max, sqrt, sin, cos, floor } = Math
+const { min, max, sqrt, sin, cos, abs } = Math
 const MAX_SIDE = 200
+const MAGIC_CONSTANT = 75
+
+const directions = {
+  hor: s => ['yellow', 'pink', s.energy],
+  dec: s => ['lightblue', 'violet', s.acousticness],
+  inc: s => ['orange', 'blue', s.instrumentalness],
+}
 
 export function getSongSides(song, now) {
   const playedUntil = song.endedAt || now
@@ -10,19 +17,26 @@ export function getSongSides(song, now) {
 }
 
 export function getSongX(song, now) {
-  const period = 50 + 50 * (1 - song.energy)
-  const delta = (song.danceability * sin(now / period)) / 100
-  return song.valence + delta
+  const period = MAGIC_CONSTANT + MAGIC_CONSTANT * (1 - song.energy)
+  const delta = (song.danceability * sin(now / period) ** 2) / period
+  return song.x + delta
 }
 
 export function getSongY(song, now) {
-  const period = 50 + 50 * (1 - song.energy)
-  const delta = (song.danceability * cos(now / period)) / 100
-  return song.acousticness + delta
+  const period = MAGIC_CONSTANT + MAGIC_CONSTANT * (1 - song.energy)
+  const delta = (song.danceability * cos(now / period)) / period
+  return song.y + delta
+}
+
+export function getSongGradient(song, direction) {
+  const [leftColor, rightColor, center] = directions[direction](song)
+  const availableSpace = 1 - abs(0.5 - center)
+  const left = max(0, center - availableSpace / 2)
+  const right = min(1, center + availableSpace / 2)
+  return [[left / 2, leftColor], [right / 2, rightColor]]
 }
 
 export function parseSong(song) {
-  console.log('song', song)
   const {
     acousticness,
     danceability,
@@ -55,6 +69,9 @@ export function parseSong(song) {
     danceability,
     tempo,
     energy,
+    instrumentalness,
+    x: Math.random(),
+    y: Math.random(),
   }
 }
 
