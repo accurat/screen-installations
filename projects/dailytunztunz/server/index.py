@@ -15,6 +15,12 @@ initialize()
 model = None
 
 
+def update_model():
+    global model
+    all_songs = retrieve_all_songs()
+    model = build_model(all_songs)
+
+
 @app.route("/")
 def home():
     return "Wella!"
@@ -34,6 +40,7 @@ def callback():
 
 @app.route("/playing")
 def playing():
+    update_model()
     songs = retrieve_playing_songs()
     model(songs)
     return jsonify(songs)
@@ -41,6 +48,7 @@ def playing():
 
 @app.route("/last")
 def last():
+    update_model()
     songs = retrieve_last_songs()
     model(songs)
     return jsonify(songs)
@@ -48,6 +56,5 @@ def last():
 
 if __name__ == "__main__":
     start_scheduler()
-    all_songs = retrieve_all_songs()
-    model = build_model(all_songs)
+    update_model()
     app.run(debug=False, host='0.0.0.0', port=3000)
