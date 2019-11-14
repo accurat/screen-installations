@@ -83,6 +83,12 @@ def parse_row(row):
     }
 
 
+def parse_song(song):
+    [json_data] = song
+    song_data = json.loads(json_data)
+    return song_data
+
+
 @with_connection
 def retrieve_playing_songs(cursor):
     cursor.execute("""SELECT
@@ -116,8 +122,15 @@ def retrieve_last_songs(cursor):
                    user_song
                    LEFT JOIN songs ON
                    songs.id=user_song.song_id
-                   ORDER BY user_song.iteration DESC
+                   ORDER BY RANDOM()
                    LIMIT 10
                    """)
     rows = [parse_row(row) for row in cursor.fetchall()]
+    return rows
+
+
+@with_connection
+def retrieve_all_songs(cursor):
+    cursor.execute("SELECT json FROM songs;")
+    rows = [parse_song(row) for row in cursor.fetchall()]
     return rows
