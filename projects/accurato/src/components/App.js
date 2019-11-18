@@ -127,6 +127,8 @@ export class App extends React.Component {
       }
     }
 
+
+
     this.positions[i] += this.velocities[i]
     // if (this.targetPositions[i] !== 0 && this.positions[i] > this.targetPositions[i]) {
     if (this.velocities[i] === 0) {
