@@ -18,7 +18,7 @@ const ACCELETATION_TIME = 1
 const SHUFFLING_TIME = 4 // 5
 const DECELETATION_TIME = 1
 const STOP_SHUFFLE_OFFSET = 1
-const STATIC_TIME = 10
+const STATIC_TIME = 5
 
 // TODO capitalizeee?? no
 const minTransform = 100 / ROW_IMAGES
@@ -130,11 +130,11 @@ export class App extends React.Component {
     this.positions[i] += this.velocities[i]
     // if (this.targetPositions[i] !== 0 && this.positions[i] > this.targetPositions[i]) {
     if (this.velocities[i] === 0) {
-      this.positions[i] = this.targetPositions[i]
-
+      // this.positions[i] = this.targetPositions[i]
+      this.positions[i] = 0
       // make it go from initialTransform to maxTransform
       const transform = initialTransform + (this.positions[i] % (maxTransform - initialTransform))
-      row.style.transform = `translateX(-${transform}%)`
+      row.style.transform = `translateX(-${initialTransform}%)`
       // rowBlurred.style.opacity = this.velocities[i] / TOP_VELOCITY
       if (i === SLICES - 1) this.stopShuffle()
       return
@@ -190,6 +190,11 @@ export class App extends React.Component {
       pool[ROW_IMAGES - 2] = pool[1]
       pool[ROW_IMAGES - 1] = pool[2]
     })
+
+    // fissa marta falasco boba
+    newPools[0][1] = 'images/team/marta_palmisano.png'
+    newPools[1][1] = 'images/team/luca_falasco.png'
+    newPools[2][1] = 'images/team/davide_grimoldi.png'
 
     return newPools
   }
