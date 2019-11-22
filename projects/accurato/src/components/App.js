@@ -194,9 +194,9 @@ export class App extends React.Component {
     })
 
     // fissa marta falasco boba
-    newPools[0][1] = 'images/team/marta_palmisano.png'
+    newPools[0][1] = 'images/team/luca_falasco.png'
     newPools[1][1] = 'images/team/luca_falasco.png'
-    newPools[2][1] = 'images/team/davide_grimoldi.png'
+    newPools[2][1] = 'images/team/luca_falasco.png'
 
     return newPools
   }
