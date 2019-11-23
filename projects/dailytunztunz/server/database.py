@@ -122,6 +122,24 @@ def retrieve_last_songs(cursor):
                    user_song
                    LEFT JOIN songs ON
                    songs.id=user_song.song_id
+                   ORDER BY iteration DESC
+                   LIMIT 10
+                   """)
+    rows = [parse_row(row) for row in cursor.fetchall()]
+    return rows
+
+
+@with_connection
+def retrieve_random_songs(cursor):
+    cursor.execute("""SELECT
+                   user_song.user_id,
+                   user_song.progress_ms,
+                   songs.duration_ms,
+                   songs.json
+                   FROM
+                   user_song
+                   LEFT JOIN songs ON
+                   songs.id=user_song.song_id
                    ORDER BY RANDOM()
                    LIMIT 10
                    """)

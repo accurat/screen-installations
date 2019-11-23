@@ -3,7 +3,7 @@ from flask import Flask, request, redirect, jsonify
 from dotenv import load_dotenv
 from analysis import build_model
 from spotify import get_spotify_url, save_user, save_recent_songs
-from database import initialize, retrieve_last_songs, retrieve_playing_songs, retrieve_all_songs
+from database import initialize, retrieve_last_songs, retrieve_playing_songs, retrieve_all_songs, retrieve_random_songs
 from scheduler import start_scheduler
 
 load_dotenv()
@@ -50,6 +50,14 @@ def playing():
 def last():
     update_model()
     songs = retrieve_last_songs()
+    model(songs)
+    return jsonify(songs)
+
+
+@app.route("/random")
+def random():
+    update_model()
+    songs = retrieve_random_songs()
     model(songs)
     return jsonify(songs)
 

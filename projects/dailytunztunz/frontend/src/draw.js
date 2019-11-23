@@ -36,6 +36,7 @@ function updateSongs(songs, newSongs) {
 function drawSongs(canvas, songs, now) {
   const ctx = canvas.getContext('2d')
   const { width, height } = getSize(canvas)
+  ctx.globalAlpha = 1
   ctx.clearRect(0, 0, width, height)
   for (const song of songs) {
     const alpha = song.playing ? 1 : 0.8

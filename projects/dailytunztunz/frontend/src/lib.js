@@ -33,7 +33,10 @@ export function getSongGradient(song, direction) {
   const availableSpace = 1 - abs(0.5 - center)
   const left = max(0, center - availableSpace / 2)
   const right = min(1, center + availableSpace / 2)
-  return [[left / 2, leftColor], [right / 2, rightColor]]
+  return [
+    [left / 2, leftColor],
+    [right / 2, rightColor],
+  ]
 }
 
 export function parseSong(song) {
@@ -54,6 +57,8 @@ export function parseSong(song) {
     time_signature,
     user_id,
     valence,
+    x,
+    y,
   } = song
   const songId = `${user_id}-${id}`
   const startedAt = Date.now() - progress_ms
@@ -70,8 +75,8 @@ export function parseSong(song) {
     tempo,
     energy,
     instrumentalness,
-    x: Math.random(),
-    y: Math.random(),
+    x,
+    y,
   }
 }
 
