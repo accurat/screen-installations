@@ -1,8 +1,9 @@
 import React from 'react'
 import * as math from 'mathjs'
+import { chunk } from 'lodash-es'
 
 export class App extends React.Component {
-  state = { coefficients: [] }
+  state = { coefficients: [], people: {} }
   canvas = React.createRef()
 
   componentDidMount() {
@@ -10,12 +11,11 @@ export class App extends React.Component {
       .fetch('./rotated.json')
       .then(r => r.json())
       .then(data => {
-        const coefficients = data.people['stefania_guerra']
+        // const coefficients = Array(data.coeffs.length).fill(0)
+        const coefficients = data.people['stefano_gallo']
         this.setState({ ...data, coefficients }, () => this.draw())
       })
   }
-
-  get coefficientCouples() {}
 
   draw = () => {
     const ctx = this.canvas.current.getContext('2d')
@@ -44,22 +44,38 @@ export class App extends React.Component {
     this.setState({ coefficients }, () => window.requestAnimationFrame(() => this.draw()))
   }
 
+  renderCoefficientRow = (coefficients, idx) => {
+    return (
+      <div className="w-90 flex pb4">
+        {coefficients.map((val, jdx) => {
+          const realIdx = idx * coefficients.length + jdx
+          return (
+            <div className="flex-auto flex justify-around ph2" key={realIdx}>
+              <label className="w3">{`PC${realIdx}`}</label>
+              <input
+                key={realIdx}
+                type="range"
+                className="w-80"
+                min={-100}
+                max={100}
+                value={val}
+                step={0.01}
+                onChange={this.handleRange(realIdx)}
+              />
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   render() {
+    const coefficients = chunk(this.state.coefficients, 5)
     return (
       <div className="w-100 h-100 flex flex-column items-center">
-        <canvas ref={this.canvas} className="o-90" />
-        {this.state.coefficients.map((v, idx) => (
-          <input
-            className="db w-80"
-            key={idx}
-            type="range"
-            min={-10}
-            max={10}
-            value={v}
-            step={0.01}
-            onChange={this.handleRange(idx)}
-          />
-        ))}
+        <canvas ref={this.canvas} className="o-90 pa3" />
+        {coefficients.map(this.renderCoefficientRow)}
+        {/* <select>{Object.values(this.state.people).map((v > {}))}</select> */}
       </div>
     )
   }

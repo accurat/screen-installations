@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { PcProgression } from './components/PcProgression'
 import { App } from './components/App'
 import 'modern-normalize'
 import '@accurat/tachyons-lite'
@@ -8,7 +9,8 @@ import './reset.css'
 import './style.css'
 
 function renderApp() {
-  ReactDOM.render(<App />, document.getElementById('root'))
+  const CurrentComponent = window.location.pathname.includes('progression') ? PcProgression : App
+  ReactDOM.render(<CurrentComponent />, document.getElementById('root'))
 }
 
 // First render
