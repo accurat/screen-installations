@@ -11,8 +11,9 @@ export class App extends React.Component {
       .fetch('./rotated.json')
       .then(r => r.json())
       .then(data => {
-        // const coefficients = Array(data.coeffs.length).fill(0)
-        const coefficients = data.people['stefano_gallo']
+        const keys = Object.keys(data.people)
+        const id = window.location.pathname.split('/')[1] || Math.round(Math.random() * keys.length)
+        const coefficients = data.people[keys[id]]
         this.setState({ ...data, coefficients }, () => this.draw())
       })
   }
@@ -46,7 +47,7 @@ export class App extends React.Component {
 
   renderCoefficientRow = (coefficients, idx) => {
     return (
-      <div className="w-90 flex pb4">
+      <div className="w-90 flex pb4" key={idx}>
         {coefficients.map((val, jdx) => {
           const realIdx = idx * coefficients.length + jdx
           return (
