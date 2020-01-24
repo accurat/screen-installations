@@ -8,7 +8,7 @@ export function randomHex() {
 
 const colors = paperColors.map(c => c.hex)
 const colorsPool = cloneDeep(colors)
-export function paperColor(): string {
+export function paperColor() {
   if (colorsPool.length > 0) {
     return colorsPool.pop()
   }

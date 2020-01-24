@@ -1,27 +1,19 @@
-import { stepOptimizer, optimizer } from 'voronoi-creator'
-import { Delaunay, Voronoi } from 'd3-delaunay'
+import { Delaunay } from 'd3-delaunay'
 import { polygonCentroid } from 'd3-polygon'
 import Stats from 'stats.js'
-// @ts-ignore
 import State from 'controls-state'
-// @ts-ignore
 import wrapGUI from 'controls-gui'
 import SimplexNoise from 'simplex-noise'
+import { cloneDeep } from 'lodash-es'
 import { paperColor } from './lib/color-utils'
 import 'modern-normalize'
 // import '@accurat/tachyons-lite'
 // import 'tachyons-extra'
 // import './reset.css'
 import './style.css'
-import { cloneDeep } from 'lodash-es'
 
 const simplex = new SimplexNoise()
 
-declare global {
-  interface Window {
-    DEBUG: boolean
-  }
-}
 window.DEBUG = window.location.search.includes('debug')
 
 const stats = new Stats()
@@ -33,16 +25,16 @@ class CommitVoronoi {
   canvas = document.querySelector('canvas')
   ctx = this.canvas.getContext('2d')
   tStart = performance.now()
-  voronoi: Voronoi<number[]>
-  points: ArrayLike<number>
-  colors: string[]
-  state: any
+  voronoi
+  points
+  colors
+  state
 
   constructor() {
     // TODO get those from data
-    const sizes = Array(20)
-      .fill(0)
-      .map(Math.random)
+    // const sizes = Array(20)
+    //   .fill(0)
+    //   .map(Math.random)
 
     // TODO mattiaz's generator
     const startingPoints = Array(20)
@@ -83,23 +75,23 @@ class CommitVoronoi {
     this.canvas.height = window.innerHeight
   }
 
-  xScale = (n: number) => {
+  xScale = n => {
     return n * this.canvas.width
   }
 
-  yScale = (n: number) => {
+  yScale = n => {
     return n * this.canvas.height
   }
 
-  scalePoint = (point: number[]) => {
+  scalePoint = point => {
     return [this.xScale(point[0]), this.yScale(point[1])]
   }
 
-  scalePolygon = (polygon: number[][]) => {
+  scalePolygon = polygon => {
     return polygon.map(this.scalePoint)
   }
 
-  drawPoint = (point: number[], color: string) => {
+  drawPoint = (point, color) => {
     const RADIUS = 2.5
 
     this.ctx.beginPath()
@@ -110,7 +102,7 @@ class CommitVoronoi {
     this.ctx.fill()
   }
 
-  drawLine = (from: number[], to: number[], color: string) => {
+  drawLine = (from, to, color) => {
     const STROKE_WIDTH = 1
 
     this.ctx.beginPath()
@@ -122,7 +114,7 @@ class CommitVoronoi {
     this.ctx.stroke()
   }
 
-  drawPolygon = (polygon: number[][], color: string) => {
+  drawPolygon = (polygon, color) => {
     this.ctx.beginPath()
     this.ctx.moveTo(polygon[0][0], polygon[0][1])
     for (let i = 1; i < polygon.length; i++) {
@@ -134,14 +126,14 @@ class CommitVoronoi {
     this.ctx.fill()
   }
 
-  update = (ms: number) => {
+  update = ms => {
     const t = (ms - this.tStart) / 1000
     stats.begin()
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
     const polygons = Array.from(this.voronoi.cellPolygons())
-    // @ts-ignore
+
     const centroids = polygons.map(polygonCentroid)
 
     const EASING_FACTOR = this.state.relaxation
@@ -173,9 +165,9 @@ class CommitVoronoi {
       const x0 = point[0]
       const y0 = point[1]
       const [x1, y1] = target
-      // @ts-ignore
+
       this.points[i] = x0 + (x1 - x0) * EASING_FACTOR
-      // @ts-ignore
+
       this.points[i + 1] = y0 + (y1 - y0) * EASING_FACTOR
 
       // draw!
@@ -190,7 +182,6 @@ class CommitVoronoi {
       }
     }
 
-    // @ts-ignore
     this.voronoi.update()
 
     stats.end()
