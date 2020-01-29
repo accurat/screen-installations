@@ -1,7 +1,7 @@
 import { draw } from './draw'
 import { parseSong } from './lib'
 
-const SERVER_URL = 'http://localhost:3001'
+const SERVER_URL = 'http://localhost:5001'
 
 function createEmitter() {
   const source = new EventSource(SERVER_URL)

@@ -17,15 +17,21 @@ export function getSongSides(song, now) {
 }
 
 export function getSongX(song, now) {
+  // const period = MAGIC_CONSTANT + MAGIC_CONSTANT * (1 - song.energy)
+  // const delta = (song.danceability * sin(now / period) ** 2) / period
+  // return song.x + delta
   const period = MAGIC_CONSTANT + MAGIC_CONSTANT * (1 - song.energy)
   const delta = (song.danceability * sin(now / period) ** 2) / period
-  return song.x + delta
+  return song.energy + delta
 }
 
 export function getSongY(song, now) {
+  // const period = MAGIC_CONSTANT + MAGIC_CONSTANT * (1 - song.energy)
+  // const delta = (song.danceability * cos(now / period)) / period
+  // return song.y + delta
   const period = MAGIC_CONSTANT + MAGIC_CONSTANT * (1 - song.energy)
   const delta = (song.danceability * cos(now / period)) / period
-  return song.y + delta
+  return song.danceability + delta
 }
 
 export function getSongGradient(song, direction) {

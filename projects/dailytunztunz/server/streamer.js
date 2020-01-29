@@ -2,7 +2,9 @@ const http = require("http");
 
 function getData(cb) {
   http
-    .get("http://localhost:3000/last", res => res.on("data", d => cb(d.toString())))
+    .get("http://localhost:5000/last", res =>
+      res.on("data", d => cb(d.toString()))
+    )
     .on("error", err => cb(""));
 }
 
@@ -44,7 +46,7 @@ function startServer() {
 
   setInterval(() => publish(listeners), 1000);
 
-  server.listen(3001);
+  server.listen(5001);
 }
 
 startServer();
