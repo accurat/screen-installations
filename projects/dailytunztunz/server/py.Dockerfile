@@ -8,6 +8,6 @@ COPY .env /app/.env
 
 WORKDIR /app
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt --extra-index-url https://www.piwheels.org/simple
 
 CMD ["python", "index.py"]
