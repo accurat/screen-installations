@@ -1,10 +1,10 @@
 const http = require("http");
 
+const serverUrl = process.env.SERVER_URL || "http://localhost:5000";
+
 function getData(cb) {
   http
-    .get("http://localhost:5000/last", res =>
-      res.on("data", d => cb(d.toString()))
-    )
+    .get(`${serverUrl}/last`, res => res.on("data", d => cb(d.toString())))
     .on("error", err => cb(""));
 }
 
@@ -46,7 +46,7 @@ function startServer() {
 
   setInterval(() => publish(listeners), 1000);
 
-  server.listen(5001);
+  server.listen(5000);
 }
 
 startServer();

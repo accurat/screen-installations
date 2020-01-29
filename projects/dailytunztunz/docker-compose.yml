@@ -1,0 +1,25 @@
+version: "3"
+services:
+  server:
+    image: "accurat/tunztunz-server"
+    build:
+      context: ./server
+      dockerfile: ./py.Dockerfile
+    restart: always
+    volumes:
+      - "./database.db:/app/database.db"
+  streamer:
+    image: "accurat/tunztunz-streamer"
+    build:
+      context: ./server
+      dockerfile: ./js.Dockerfile
+    restart: always
+    environment:
+      SERVER_URL: http://server:5000
+    command: ["node", "streamer.js"]
+  nginx:
+    image: "nginx"
+    ports:
+      - "5000:80"
+    volumes:
+      - "./server/default.conf:/etc/nginx/conf.d/default.conf"

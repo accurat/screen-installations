@@ -18,6 +18,8 @@ model = None
 def update_model():
     global model
     all_songs = retrieve_all_songs()
+    if len(all_songs) < 10:
+        return
     model = build_model(all_songs)
 
 
@@ -42,7 +44,8 @@ def callback():
 def playing():
     update_model()
     songs = retrieve_playing_songs()
-    model(songs)
+    if model is not None:
+        model(songs)
     return jsonify(songs)
 
 
@@ -50,7 +53,8 @@ def playing():
 def last():
     update_model()
     songs = retrieve_last_songs()
-    model(songs)
+    if model is not None:
+        model(songs)
     return jsonify(songs)
 
 
@@ -58,7 +62,8 @@ def last():
 def random():
     update_model()
     songs = retrieve_random_songs()
-    model(songs)
+    if model is not None:
+        model(songs)
     return jsonify(songs)
 
 
