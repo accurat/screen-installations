@@ -4,9 +4,11 @@ import Stats from 'stats.js'
 import State from 'controls-state'
 import wrapGUI from 'controls-gui'
 import SimplexNoise from 'simplex-noise'
-import { cloneDeep } from 'lodash-es'
-import { paperColor } from './lib/color-utils'
+import { cloneDeep, orderBy } from 'lodash-es'
+import { weightedVoronoi } from 'd3-weighted-voronoi'
+import { voronoiMapSimulation } from 'd3-voronoi-map'
 import 'modern-normalize'
+import { paperColor } from './lib/color-utils'
 // import '@accurat/tachyons-lite'
 // import 'tachyons-extra'
 // import './reset.css'
@@ -21,6 +23,232 @@ if (window.DEBUG) {
   document.body.appendChild(stats.dom)
 }
 
+const POINTS = [
+  [0.44565811321802135, 0.3694042437866161],
+  [0.33861652211044235, 0.12155113140863932],
+  [0.5361131036702566, 0.18830631408207985],
+  [0.9188506474588458, 0.608750460938544],
+  [0.21249613588616117, 0.2624308495284128],
+  [0.10490949454605365, 0.12085460724452578],
+  [0.5451037440696135, 0.8480702514511347],
+  [0.30497286766099485, 0.9208756048082983],
+  [0.3393970657598528, 0.6610364216143856],
+  [0.1402791091770551, 0.46339769582527907],
+  [0.1198781144025119, 0.8275293147957573],
+  [0.0429654764935574, 0.26537313232950827],
+  [0.3999640910226635, 0.9862337846610858],
+  [0.8565597780717994, 0.8601254830938436],
+  [0.643138067448363, 0.24808470080805123],
+  [0.5744646399133831, 0.08288570843648849],
+  [0.8284647875476423, 0.11048501985056847],
+  [0.6690385192205609, 0.5649686887353645],
+  [0.8598365863790565, 0.34893514810853277],
+  [0.7266133523042462, 0.7458018720280303],
+]
+
+const WEIGHTS = [
+  0.1653030508881126,
+  0.7773429972387613,
+  0.564999518939709,
+  0.0780622091405414,
+  0.7225430289417549,
+  0.9539361443422358,
+  0.9508310256718737,
+  0.8072182880593584,
+  0.664588164505624,
+  0.9803871654389547,
+  0.25210345551231494,
+  0.4831169554357593,
+  0.8957936607602162,
+  0.7355563802158629,
+  0.2926924321548048,
+  0.05297171845358273,
+  0.008606108528119494,
+  0.37129346314507927,
+  0.00128786146044102,
+  0.013965411479851975,
+]
+
+const POLYGONS = [
+  [
+    [0.48613008229326427, 0.18371941197493183],
+    [0.25646949748162784, 0.2829041031699536],
+    [0.25169961975886057, 0.2933006520425377],
+    [0.319751603021021, 0.5143974031551884],
+    [0.4686566523086787, 0.5686534411101678],
+    [0.651741343529658, 0.35952783717684517],
+    [0.5692367871821568, 0.22522963911836882],
+  ],
+  [
+    [0.48613008229326427, 0.18371941197493183],
+    [0.49788578483289747, 0.14893992411450374],
+    [0.4734682689460884, 3.552713678800501e-17],
+    [0.20201670670678368, 0],
+    [0.20132070121051585, 0.23353299724820914],
+    [0.25646949748162784, 0.2829041031699536],
+  ],
+  [
+    [0.48613008229326427, 0.18371941197493183],
+    [0.5692367871821568, 0.22522963911836882],
+    [0.5926020898355405, 0.18339728453164938],
+    [0.49788578483289747, 0.14893992411450374],
+  ],
+  [
+    [0.9999999999999999, 0.4780169796291679],
+    [0.8418235046553123, 0.5139449519106392],
+    [0.8102966381072564, 0.6938324537802432],
+    [1, 0.7408410516776271],
+  ],
+  [
+    [0.25646949748162784, 0.2829041031699536],
+    [0.20132070121051585, 0.23353299724820914],
+    [0.16409629352069185, 0.26182057526707303],
+    [0.25169961975886057, 0.2933006520425377],
+  ],
+  [
+    [0.20132070121051585, 0.23353299724820914],
+    [0.20201670670678368, 3.552713678800501e-17],
+    [0, 1.990590354560232e-17],
+    [7.105427357601002e-17, 0.20880329819188873],
+    [0.13153584401559607, 0.26518263566063993],
+    [0.16409629352069185, 0.26182057526707303],
+  ],
+  [
+    [0.3490773523100181, 0.8142408153647505],
+    [0.3936003326215808, 0.9610891141442396],
+    [0.4306409714635512, 1],
+    [0.7077829459936731, 1],
+    [0.7162569846042259, 0.7810667985612321],
+    [0.6948227467378019, 0.7430245401438306],
+    [0.4938310315684713, 0.6550354001766892],
+  ],
+  [
+    [0.3490773523100181, 0.8142408153647505],
+    [0.2884877507587167, 0.8062137409993865],
+    [0.19075819325010795, 1],
+    [0.3668279152761454, 1],
+    [0.3936003326215808, 0.9610891141442396],
+  ],
+  [
+    [0.3490773523100181, 0.8142408153647505],
+    [0.4938310315684713, 0.6550354001766892],
+    [0.4686566523086787, 0.5686534411101678],
+    [0.319751603021021, 0.5143974031551884],
+    [0.17656964262614433, 0.6586510116497557],
+    [0.2884877507587167, 0.8062137409993865],
+  ],
+  [
+    [-1.7763568394002505e-17, 0.3298222469456356],
+    [0, 0.6487584448719969],
+    [0.17656964262614433, 0.6586510116497557],
+    [0.319751603021021, 0.5143974031551884],
+    [0.25169961975886057, 0.2933006520425377],
+    [0.16409629352069185, 0.26182057526707303],
+    [0.13153584401559607, 0.26518263566063993],
+  ],
+  [
+    [0, 0.6487584448719969],
+    [0, 1],
+    [0.1907581932501079, 1],
+    [0.2884877507587167, 0.8062137409993865],
+    [0.17656964262614433, 0.6586510116497557],
+  ],
+  [
+    [0, 0.3298222469456356],
+    [0.13153584401559607, 0.26518263566063993],
+    [-1.7763568394002505e-17, 0.20880329819188873],
+  ],
+  [
+    [0.43064097146355107, 1],
+    [0.3936003326215808, 0.9610891141442396],
+    [0.36682791527614533, 1],
+  ],
+  [
+    [0.7077829459936731, 1],
+    [1, 1],
+    [0.9999999999999999, 0.7408410516776271],
+    [0.8102966381072564, 0.6938324537802432],
+    [0.7710882083930285, 0.7187426514721964],
+    [0.7162569846042259, 0.7810667985612321],
+  ],
+  [
+    [0.5692367871821568, 0.22522963911836882],
+    [0.651741343529658, 0.35952783717684517],
+    [0.6656917192103652, 0.35838760590518787],
+    [0.719172719930372, 0.24347236301660863],
+    [0.6552367784698758, 0.15735996620811218],
+    [0.5926020898355405, 0.18339728453164938],
+  ],
+  [
+    [0.4734682689460884, -1.4210854715202004e-16],
+    [0.49788578483289747, 0.14893992411450374],
+    [0.5926020898355405, 0.18339728453164938],
+    [0.6552367784698758, 0.15735996620811218],
+    [0.6723352988917632, 0],
+  ],
+  [
+    [1, 0],
+    [0.6723352988917632, 0],
+    [0.6552367784698758, 0.15735996620811218],
+    [0.719172719930372, 0.24347236301660863],
+    [1, 0.20652519506546996],
+  ],
+  [
+    [0.4686566523086787, 0.5686534411101678],
+    [0.4938310315684713, 0.6550354001766892],
+    [0.6948227467378019, 0.7430245401438306],
+    [0.7710882083930285, 0.7187426514721964],
+    [0.8102966381072564, 0.6938324537802432],
+    [0.8418235046553123, 0.5139449519106392],
+    [0.6656917192103652, 0.35838760590518787],
+    [0.651741343529658, 0.35952783717684517],
+  ],
+  [
+    [1, 0.20652519506546996],
+    [0.719172719930372, 0.24347236301660863],
+    [0.6656917192103652, 0.35838760590518787],
+    [0.8418235046553123, 0.5139449519106392],
+    [1, 0.4780169796291679],
+  ],
+  [
+    [0.7162569846042259, 0.7810667985612321],
+    [0.7710882083930285, 0.7187426514721964],
+    [0.6948227467378019, 0.7430245401438306],
+  ],
+]
+
+function generateWeightedVoronoi(weights, initialPositions = [], initialWeights = []) {
+  const weightsData = weights.map((weight, i) => ({ index: i, weight }))
+
+  const simulation = voronoiMapSimulation(weightsData)
+    .clip([
+      [0, 0],
+      [0, 100],
+      [100, 100],
+      [100, 0],
+    ])
+    // .initialPosition((d)=>[d.previousX, d.previousY])
+    // .initialWeight((d)=>d.previousWeight)
+    .stop()
+
+  let state = simulation.state()
+  let MAX_ITERATIONS = 1000
+  while (!state.ended && MAX_ITERATIONS > 0) {
+    simulation.tick()
+    state = simulation.state()
+    MAX_ITERATIONS--
+  }
+
+  const polygons = state.polygons
+  const points = polygons.map(polygon => [polygon.site.x, polygon.site.y])
+
+  function scalePoint(p) {
+    return p.map(n => n / 100)
+  }
+
+  return [points.map(scalePoint), polygons.map(poly => poly.map(scalePoint))]
+}
+
 class CommitVoronoi {
   canvas = document.querySelector('canvas')
   ctx = this.canvas.getContext('2d')
@@ -32,22 +260,36 @@ class CommitVoronoi {
 
   constructor() {
     // TODO get those from data
-    // const sizes = Array(20)
-    //   .fill(0)
-    //   .map(Math.random)
+    this.weights = Array(20)
+      .fill()
+      .map(Math.random)
 
-    // TODO mattiaz's generator
     const startingPoints = Array(20)
-      .fill(0)
+      .fill()
       .map(() => [Math.random(), Math.random()])
     this.colors = Array(20)
-      .fill(0)
+      .fill()
       .map(paperColor)
+
+    this.weightedVoronoi = weightedVoronoi()
+      .x(d => d.x)
+      .y(d => d.y)
+      .weight(d => d.weight * 0.05)
+      .clip([
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [1, 0],
+      ])
+
+    // const [points, polygons] = generateWeightedVoronoi(this.weights)
+    this.targetPoints = POINTS
+    this.polygons3 = POLYGONS
 
     // TODO keep the starting points and later do
     // target[0] = startingPoints[i] + noise(t)
     // target[1] = startingPoints[i + 1] + noise(t)
-    this.voronoi = Delaunay.from(startingPoints).voronoi([0, 0, 1, 1])
+    this.voronoi = Delaunay.from(this.targetPoints).voronoi([0, 0, 1, 1])
     this.points = this.voronoi.delaunay.points
 
     this.state = State({
@@ -132,18 +374,32 @@ class CommitVoronoi {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
-    const polygons = Array.from(this.voronoi.cellPolygons())
+    const polygons = this.polygons3
+    // const polygons = Array.from(this.voronoi.cellPolygons())
+
+    // these are sooo much fewer
+    // const polygons = orderBy(
+    //   this.weightedVoronoi(
+    //     this.targetPoints.map((point, i) => ({ x: point[0], y: point[1], weight: WEIGHTS[i] }))
+    //   ),
+    //   polygon =>
+    //     this.targetPoints.findIndex(
+    //       p => p[0] === polygon.site.originalObject.x && p[1] === polygon.site.originalObject.y
+    //     ),
+    //   'asc'
+    // )
 
     const centroids = polygons.map(polygonCentroid)
 
     const EASING_FACTOR = this.state.relaxation
-    const NOISE_AMPLITUDE = this.state.noise.amplitude
-    const NOISE_FREQUENCY = this.state.noise.frequency
+    const NOISE_AMPLITUDE = 0.12 // this.state.noise.amplitude
+    const NOISE_FREQUENCY = 2.83 // this.state.noise.frequency
     for (let i = 0; i < this.points.length; i += 2) {
       // this is done also with bitwise operation i >> 1, but why the fuck
       const normalizedIndex = Math.floor(i / 2)
 
       const point = [this.points[i], this.points[i + 1]]
+      const pointTarget = this.targetPoints[normalizedIndex]
       const polygon = polygons[normalizedIndex]
       const centroid = centroids[normalizedIndex]
 
@@ -153,6 +409,7 @@ class CommitVoronoi {
       // https://observablehq.com/@mbostock/lloyds-algorithm
       // https://observablehq.com/@fil/spherical-lloyds-relaxation
       const target = cloneDeep(centroid)
+      // const target = this.targetPoints[normalizedIndex]
 
       // give 'em a wobble
       if (this.state.noise.enabled) {
@@ -166,19 +423,24 @@ class CommitVoronoi {
       const y0 = point[1]
       const [x1, y1] = target
 
-      this.points[i] = x0 + (x1 - x0) * EASING_FACTOR
+      // this.points[i] = x0 + (x1 - x0) * EASING_FACTOR
 
-      this.points[i + 1] = y0 + (y1 - y0) * EASING_FACTOR
+      // this.points[i + 1] = y0 + (y1 - y0) * EASING_FACTOR
+
+      this.targetPoints[normalizedIndex][0] = x0 + (x1 - x0) * EASING_FACTOR
+
+      this.targetPoints[normalizedIndex][1] = y0 + (y1 - y0) * EASING_FACTOR
 
       // draw!
       if (polygon) {
         this.drawPolygon(this.scalePolygon(polygon), this.colors[normalizedIndex])
       }
 
-      if (window.DEBUG && this.state.showCenters) {
-        this.drawPoint(this.scalePoint(point), '#000')
-        this.drawLine(this.scalePoint(point), this.scalePoint(target), '#000')
-        this.drawPoint(this.scalePoint(target), '#f00')
+      if (true) {
+        this.drawPoint(this.scalePoint(pointTarget), '#000')
+        // this.drawPoint(this.scalePoint(point), '#000')
+        // this.drawLine(this.scalePoint(point), this.scalePoint(target), '#000')
+        // this.drawPoint(this.scalePoint(target), '#f00')
       }
     }
 

@@ -37,6 +37,7 @@
     "d3-delaunay": "^5.1.5",
     "d3-polygon": "^1.0.5",
     "d3-voronoi-map": "^2.0.1",
+    "d3-weighted-voronoi": "^1.0.1",
     "lodash-es": "^4.17.15",
     "modern-normalize": "^0.5.0",
     "paper-colors": "^1.0.0",
