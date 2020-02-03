@@ -8,11 +8,13 @@ import { cloneDeep, orderBy } from 'lodash-es'
 import { weightedVoronoi } from 'd3-weighted-voronoi'
 import { voronoiMapSimulation } from 'd3-voronoi-map'
 import 'modern-normalize'
+import seedrandom from 'seedrandom'
 import { paperColor } from './lib/color-utils'
 // import '@accurat/tachyons-lite'
 // import 'tachyons-extra'
 // import './reset.css'
 import './style.css'
+import { interpolate } from 'flubber'
 
 const simplex = new SimplexNoise()
 
@@ -67,6 +69,29 @@ const WEIGHTS = [
   0.37129346314507927,
   0.00128786146044102,
   0.013965411479851975,
+]
+
+const WEIGHTSSS = [
+  30291.46428558656,
+  50706.3257261289,
+  43386.224123959306,
+  25252.19845975309,
+  51863.04698206204,
+  56225.87417999514,
+  55942.32321665682,
+  55593.472986826455,
+  43261.43592056412,
+  57132.61656354171,
+  29964.839623070064,
+  39103.64704627544,
+  58603.53504840445,
+  51770.650354812205,
+  30482.967864123744,
+  26139.69868607728,
+  26401.328308989316,
+  34771.090816938944,
+  18312.127535720057,
+  15623.056922800832,
 ]
 
 const POLYGONS = [
@@ -217,36 +242,68 @@ const POLYGONS = [
   ],
 ]
 
-function generateWeightedVoronoi(weights, initialPositions = [], initialWeights = []) {
-  const weightsData = weights.map((weight, i) => ({ index: i, weight }))
+let WHATTTT = 0
 
-  const simulation = voronoiMapSimulation(weightsData)
-    .clip([
-      [0, 0],
-      [0, 100],
-      [100, 100],
-      [100, 0],
-    ])
-    // .initialPosition((d)=>[d.previousX, d.previousY])
-    // .initialWeight((d)=>d.previousWeight)
-    .stop()
+function generateWeightedVoronoi(weights, initialPositions = [], initialWeights = []) {
+  const weightData = weights.map((weight, i) => ({
+    index: i,
+    weight,
+    initialPositionX: initialPositions[i][0],
+    initialPositionY: initialPositions[i][1],
+    initialWeight: initialWeights[i],
+  }))
+
+  const FACTOR = 1000
+  const simulation =
+    initialWeights.length > 0
+      ? voronoiMapSimulation(weightData)
+          .clip([
+            [0, 0],
+            [0, FACTOR],
+            [FACTOR, FACTOR],
+            [FACTOR, 0],
+          ])
+          .initialPosition(d => [d.initialPositionX * FACTOR, d.initialPositionY * FACTOR])
+          .initialWeight(d => d.initialWeight)
+          .stop()
+      : voronoiMapSimulation(weightData)
+          .clip([
+            [0, 0],
+            [0, FACTOR],
+            [FACTOR, FACTOR],
+            [FACTOR, 0],
+          ])
+          .initialPosition(d => [d.initialPositionX * FACTOR, d.initialPositionY * FACTOR])
+          .stop()
 
   let state = simulation.state()
-  let MAX_ITERATIONS = 1000
+  let MAX_ITERATIONS = WHATTTT
   while (!state.ended && MAX_ITERATIONS > 0) {
     simulation.tick()
     state = simulation.state()
     MAX_ITERATIONS--
   }
 
-  const polygons = state.polygons
+  WHATTTT++
+
+  const polygons = orderBy(
+    state.polygons,
+    polygon => {
+      return initialPositions.findIndex(
+        pos => pos[0] === polygon.site.originalObject.data.originalData.initialPositionX
+      )
+    },
+    'asc'
+  )
+
+  const outweights = polygons.map(p => p.site.weight)
   const points = polygons.map(polygon => [polygon.site.x, polygon.site.y])
 
   function scalePoint(p) {
-    return p.map(n => n / 100)
+    return p.map(n => n / FACTOR)
   }
 
-  return [points.map(scalePoint), polygons.map(poly => poly.map(scalePoint))]
+  return [points.map(scalePoint), polygons.map(poly => poly.map(scalePoint)), outweights]
 }
 
 class CommitVoronoi {
@@ -257,6 +314,7 @@ class CommitVoronoi {
   points
   colors
   state
+  weightss = []
 
   constructor() {
     // TODO get those from data
@@ -271,20 +329,11 @@ class CommitVoronoi {
       .fill()
       .map(paperColor)
 
-    this.weightedVoronoi = weightedVoronoi()
-      .x(d => d.x)
-      .y(d => d.y)
-      .weight(d => d.weight * 0.05)
-      .clip([
-        [0, 0],
-        [0, 1],
-        [1, 1],
-        [1, 0],
-      ])
-
-    // const [points, polygons] = generateWeightedVoronoi(this.weights)
+    // const [points, polygons] = generateWeightedVoronoi(WEIGHTS, POINTS)
     this.targetPoints = POINTS
-    this.polygons3 = POLYGONS
+    // this.polygons = polygons
+
+    // this.targetPoints = POINTS
 
     // TODO keep the starting points and later do
     // target[0] = startingPoints[i] + noise(t)
@@ -374,7 +423,22 @@ class CommitVoronoi {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
-    const polygons = this.polygons3
+    const [newPoints, newPolygons, newWeights] = generateWeightedVoronoi(WEIGHTS, POINTS)
+    this.polygons = newPolygons
+    // this.targetPoints = newPoints
+
+    // newPoints.forEach((p, i) => {
+    //   const point = this.targetPoints[i]
+    //   const target = p
+
+    //   const x0 = point[0]
+    //   const y0 = point[1]
+    //   const [x1, y1] = target
+
+    //   this.targetPoints[i][0] = x0 + (x1 - x0) * 0.1
+    //   this.targetPoints[i][1] = y0 + (y1 - y0) * 0.1
+    // })
+
     // const polygons = Array.from(this.voronoi.cellPolygons())
 
     // these are sooo much fewer
@@ -389,7 +453,7 @@ class CommitVoronoi {
     //   'asc'
     // )
 
-    const centroids = polygons.map(polygonCentroid)
+    const centroids = this.polygons.map(polygonCentroid)
 
     const EASING_FACTOR = this.state.relaxation
     const NOISE_AMPLITUDE = 0.12 // this.state.noise.amplitude
@@ -400,7 +464,7 @@ class CommitVoronoi {
 
       const point = [this.points[i], this.points[i + 1]]
       const pointTarget = this.targetPoints[normalizedIndex]
-      const polygon = polygons[normalizedIndex]
+      const polygon = this.polygons[normalizedIndex]
       const centroid = centroids[normalizedIndex]
 
       if (!centroid) continue
@@ -408,28 +472,28 @@ class CommitVoronoi {
       // apply LLoys's relaxation
       // https://observablehq.com/@mbostock/lloyds-algorithm
       // https://observablehq.com/@fil/spherical-lloyds-relaxation
-      const target = cloneDeep(centroid)
+      // const target = cloneDeep(centroid)
       // const target = this.targetPoints[normalizedIndex]
 
-      // give 'em a wobble
-      if (this.state.noise.enabled) {
-        target[0] += simplex.noise2D(i, t * NOISE_FREQUENCY) * NOISE_AMPLITUDE
-        target[1] += simplex.noise2D(i + 1000, t * NOISE_FREQUENCY) * NOISE_AMPLITUDE
-      }
+      // // give 'em a wobble
+      // if (this.state.noise.enabled) {
+      //   target[0] += simplex.noise2D(i, t * NOISE_FREQUENCY) * NOISE_AMPLITUDE
+      //   target[1] += simplex.noise2D(i + 1000, t * NOISE_FREQUENCY) * NOISE_AMPLITUDE
+      // }
 
       // ease the point to the target
       // https://aerotwist.com/tutorials/protip-stick-vs-ease/
-      const x0 = point[0]
-      const y0 = point[1]
-      const [x1, y1] = target
+      // const x0 = point[0]
+      // const y0 = point[1]
+      // const [x1, y1] = target
 
       // this.points[i] = x0 + (x1 - x0) * EASING_FACTOR
 
       // this.points[i + 1] = y0 + (y1 - y0) * EASING_FACTOR
 
-      this.targetPoints[normalizedIndex][0] = x0 + (x1 - x0) * EASING_FACTOR
+      // this.targetPoints[normalizedIndex][0] = x0 + (x1 - x0) * EASING_FACTOR
 
-      this.targetPoints[normalizedIndex][1] = y0 + (y1 - y0) * EASING_FACTOR
+      // this.targetPoints[normalizedIndex][1] = y0 + (y1 - y0) * EASING_FACTOR
 
       // draw!
       if (polygon) {
@@ -447,7 +511,20 @@ class CommitVoronoi {
     this.voronoi.update()
 
     stats.end()
-    requestAnimationFrame(this.update)
+
+    // this.polygons = orderBy(
+    //   this.weightedVoronoi(
+    //     this.targetPoints.map((point, i) => ({ x: point[0], y: point[1], weight: WEIGHTS[i] }))
+    //   ),
+    //   polygon =>
+    //     this.targetPoints.findIndex(
+    //       p => p[0] === polygon.site.originalObject.x && p[1] === polygon.site.originalObject.y
+    //     ),
+    //   'asc'
+    // )
+
+    setTimeout(() => requestAnimationFrame(this.update), 16)
+    // requestAnimationFrame(this.update)
   }
 }
 
