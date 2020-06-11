@@ -9,7 +9,7 @@ const PROJECTS = ['accurat-faces', 'accurato']
 const ABOUT_PAGE_URL = 'https://www.accurat.it/about/'
 
 PROJECTS.forEach(async project => {
-  const PUBLIC_PATH = path.resolve(__dirname, `./projects/${project}/src/public`)
+  const PUBLIC_PATH = path.resolve(__dirname, `./projects/${project}/public`)
   const OUTPUT_DIRECTORY = path.resolve(PUBLIC_PATH, './images/team')
   const IMAGES_JSON_PATH = path.resolve(__dirname, `./projects/${project}/src/images.json`)
 
